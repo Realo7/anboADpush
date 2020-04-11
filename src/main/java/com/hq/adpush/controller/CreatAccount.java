@@ -7,9 +7,12 @@ import com.hq.adpush.entity.Advertisement_Park;
 import com.hq.adpush.service.AdContentService;
 import com.hq.adpush.service.AdService;
 import com.hq.adpush.service.AdvertisementParkService;
+import com.hq.adpush.util.httpconnect;
 import com.hq.adpush.util.restnet;
+import com.zzrb.ecc.AnboECCEncrypt;
 import com.zzrb.ecc.AnboECCSign;
 
+import com.zzrb.ecc.AnboECCVerify;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +20,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import sun.security.x509.X509CertImpl;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +35,8 @@ public class CreatAccount {
     private AdvertisementParkService AdvertisementParkService;
     @Autowired
     private AdContentService AdContentService;
+
+    private httpconnect httpconnect;
 
     //    JSONObject obj = new JSONObject();
     //新建一个账户
@@ -54,7 +61,13 @@ public class CreatAccount {
         map.put("accountName", ad.getAccountName());
         map.put("bankName", ad.getBankName());
         map.put("accountNo", ad.getAccountNo());
-        map.put("password", ad.getPassword());
+
+//        对密码进行加密
+        AnboECCEncrypt anboECCEncrypt = new AnboECCEncrypt();
+        String dataEncryptpas = anboECCEncrypt.encrypt(ad.getPassword());
+
+        map.put("password", dataEncryptpas);
+
         map.put("publicKey", ad.getPublicKey());
         String sign = anboECCSign.sign(map);
         System.out.println("加密后的信息：" + sign);
@@ -64,8 +77,23 @@ public class CreatAccount {
 
         String api = "account";
 
-//        doitpost(map,api);
-        return doitpost(map, api).toString();
+        JSONObject obj = httpconnect.doitpost(map, api);
+
+        JSONObject object = (JSONObject) JSONObject.parse(obj.getString("result"));
+
+//        把创建获得的partnerId传到数据库
+        if (object != null) {
+            Advertisement ad01 = new Advertisement();
+
+            ad01.setPartnerId(object.get("partnerId").toString());
+            ad01.setStatus(1);
+
+            boolean tr = AdService.updateAd(ad01);
+
+            System.out.println("添加结果：" + tr);
+        }
+
+        return obj.toString();
     }
 
     //    更新账户信息
@@ -90,18 +118,31 @@ public class CreatAccount {
         map.put("accountName", ad.getAccountName());
         map.put("bankName", ad.getBankName());
         map.put("accountNo", ad.getAccountNo());
-        map.put("password", ad.getPassword());
+        //对密码进行加密后再把密码放在map里面
+        AnboECCEncrypt anboECCEncrypt = new AnboECCEncrypt();
+        String dataEncryptpas = anboECCEncrypt.encrypt(ad.getPassword());
+
+        map.put("password", dataEncryptpas);
         map.put("publicKey", ad.getPublicKey());
+        map.put("partnerId", ad.getPartnerId());
+
+//        对map信息进行签名
         String sign = anboECCSign.sign(map);
-        System.out.println("加密后的信息：" + sign);
+        System.out.println("签名后的信息：" + sign);
+
+        //验签
+        AnboECCVerify anboECCVerify = new AnboECCVerify();
+        Boolean check = anboECCVerify.verify(map, sign);
+        System.out.println("check:" + check);
+
+//        验证签名之后把签名信息放在map里面
         map.put("sign", sign);
 
         System.out.println("加密后的需要提交的信息：" + map);
 
         String api = "account";
 
-//        doitpost(map,api);
-        return doitput(map, api).toString();
+        return httpconnect.doitput(map, api).toString();
     }
 
     //创建车场
@@ -118,19 +159,17 @@ public class CreatAccount {
         map.put("parkName", ad.getParkName());
         map.put("status", ad.getStatus().toString());
         map.put("cityId", ad.getCityId());
-        map.put("partnerId", ad.getParkName());
-
+        map.put("partnerId", ad.getPartnerId());
 
         String sign = anboECCSign.sign(map);
-        System.out.println("加密后的信息：" + sign);
+        System.out.println("签名后的信息：" + sign);
         map.put("sign", sign);
 
-        System.out.println("加密后的需要提交的信息：" + map);
+        System.out.println("签名后的需要提交的信息：" + map);
 
         String api = "park";
 
-//        doitpost(map,api);
-        return doitpost(map, api).toString();
+        return httpconnect.doitpost(map, api).toString();
     }
 
     //    更新车场信息
@@ -157,7 +196,7 @@ public class CreatAccount {
         String api = "park";
 
 //        doitpost(map,api);
-        return doitput(map, api).toString();
+        return httpconnect.doitput(map, api).toString();
     }
 
     //    获取车场信息
@@ -166,51 +205,45 @@ public class CreatAccount {
     public String getpark(String AdvertID) throws Exception {
         //此处将要发送的数据转换为map格式
         Advertisement_Park ad = AdvertisementParkService.findparkbyAdvertID(AdvertID);
+
+        Map<String, String> map = new HashMap<>();
+        map.put("parkId", ad.getParkId());
+        map.put("partnerId", ad.getPartnerId());
+
+        System.out.println("需要提交的信息：" + map);
+
+        String api = "park";
+
+//        doitpost(map,api);
+        return httpconnect.doitget(map, api).toString();
+    }
+
+    //    新增/更新广告位信息
+    @RequestMapping(value = "/addADinfo", method = RequestMethod.POST)
+    @ResponseBody
+    public String addADinfo(String parkId) throws Exception {
+        //此处将要发送的数据转换为map格式
+        System.out.println("开始通过车场ID寻找信息...");
+        AdContent ad = AdContentService.findbyparkId(parkId);
         //此处用来创建账户
         //对找到的信息进行签名
         AnboECCSign anboECCSign = new AnboECCSign();
         Map<String, String> map = new HashMap<>();
+        map.put("adPosIds", ad.getAdPosIds());
+        map.put("status", ad.getStatus().toString());
         map.put("parkId", ad.getParkId());
-        map.put("partnerId", ad.getAdvertID());
-
+        map.put("partnerId", ad.getPartnerId());
         String sign = anboECCSign.sign(map);
         System.out.println("加密后的信息：" + sign);
         map.put("sign", sign);
 
         System.out.println("加密后的需要提交的信息：" + map);
 
-        String api = "park";
+        String api = "advert-pos";
 
 //        doitpost(map,api);
-        return doitget(map, api).toString();
+        return httpconnect.doitput(map, api).toString();
     }
-
-//    新增/更新广告位信息
-@RequestMapping(value = "/addADinfo", method = RequestMethod.POST)
-@ResponseBody
-public String addADinfo(String parkId) throws Exception {
-    //此处将要发送的数据转换为map格式
-    System.out.println("开始通过广告主ID寻找信息...");
-    AdContent ad = AdContentService.findbyparkId(parkId);
-    //此处用来创建账户
-    //对找到的信息进行签名
-    AnboECCSign anboECCSign = new AnboECCSign();
-    Map<String, String> map = new HashMap<>();
-    map.put("adPosIds", ad.getAdPosIds());
-    map.put("status", ad.getStatus().toString());
-    map.put("parkId", ad.getParkId());
-    map.put("partnerId", ad.getPartnerId());
-    String sign = anboECCSign.sign(map);
-    System.out.println("加密后的信息：" + sign);
-    map.put("sign", sign);
-
-    System.out.println("加密后的需要提交的信息：" + map);
-
-    String api = "advert-pos";
-
-//        doitpost(map,api);
-    return doitput(map, api).toString();
-}
 
     //    获取广告位信息
     @RequestMapping(value = "/getADwinfo", method = RequestMethod.POST)
@@ -230,7 +263,7 @@ public String addADinfo(String parkId) throws Exception {
         String api = "advert-pos";
 
 //        doitpost(map,api);
-        return doitget(map, api).toString();
+        return httpconnect.doitget(map, api).toString();
     }
 
     //    获取广告
@@ -259,7 +292,7 @@ public String addADinfo(String parkId) throws Exception {
         String api = "advert";
 
 //        doitpost(map,api);
-        return doitget(map, api).toString();
+        return httpconnect.doitget(map, api).toString();
     }
 
     //    广告跳转
@@ -288,61 +321,7 @@ public String addADinfo(String parkId) throws Exception {
         String api = "advert/redirect";
 
 //        doitpost(map,api);
-        return doitget(map, api).toString();
+        return httpconnect.doitget(map, api).toString();
     }
 
-
-
-    //    把网络通信写个公共方法，稍后封装
-    public JSONObject doitpost(Map<String, String> map, String api) {
-        RestTemplate restTemplate = new RestTemplate();
-        //请求地址
-        String url = "http://118.178.56.187:8080/api/v1/" + api;
-        // 设置请求头
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);//设置参数类型和编码
-        headers.add("Uni-Source", "商户ID");
-        //入参request
-        HttpEntity<Map<String, String>> request = new HttpEntity<>(map, headers);//包装到HttpEntity
-        ResponseEntity<JSONObject> response = restTemplate.postForEntity(url, request, JSONObject.class);
-        System.out.println("post获得的参数" + response.getBody());
-
-        return response.getBody();
-    }
-
-    //get方法
-    public JSONObject doitget(Map<String, String> map, String api) {
-        RestTemplate restTemplate = new RestTemplate();
-        //请求地址
-        String url = "http://118.178.56.187:8080/api/v1/" + api;
-        // 设置请求头
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);//设置参数类型和编码
-        headers.add("Uni-Source", "商户ID");
-        //入参request
-        HttpEntity<Map<String, String>> request = new HttpEntity<>(map, headers);//包装到HttpEntity
-        ResponseEntity<JSONObject> response = restTemplate.exchange(url,HttpMethod.GET,request,JSONObject.class);
-        System.out.println("get");
-        System.out.println("get获得的参数" + response.getBody());
-
-        return response.getBody();
-    }
-
-    //put方法
-    public JSONObject doitput(Map<String, String> map, String api) {
-        RestTemplate restTemplate = new RestTemplate();
-        //请求地址
-        String url = "http://118.178.56.187:8080/api/v1/" + api;
-        // 设置请求头
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);//设置参数类型和编码
-        headers.add("Uni-Source", "商户ID");
-        //入参request
-        HttpEntity<Map<String, String>> request = new HttpEntity<>(map, headers);//包装到HttpEntity
-        ResponseEntity<JSONObject> response = restTemplate.exchange(url, HttpMethod.PUT, request, JSONObject.class);
-
-        System.out.println("put获得的参数" + response.getBody());
-
-        return response.getBody();
-    }
 }
