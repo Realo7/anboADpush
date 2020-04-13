@@ -1,5 +1,6 @@
 package com.hq.adpush.controller;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.hq.adpush.entity.AdContent;
 import com.hq.adpush.entity.Advertisement;
@@ -15,10 +16,7 @@ import com.zzrb.ecc.AnboECCSign;
 import com.zzrb.ecc.AnboECCVerify;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import sun.security.x509.X509CertImpl;
 
@@ -46,54 +44,68 @@ public class CreatAccount {
         //此处将要发送的数据转换为map格式
         System.out.println("开始通过广告主ID寻找信息...");
         Advertisement ad = AdService.findbyAdvertID(AdvertID);
-        //此处用来创建账户
-        //对找到的信息进行签名
-        AnboECCSign anboECCSign = new AnboECCSign();
-        Map<String, String> map = new HashMap<>();
-        map.put("name", ad.getName());
-        map.put("regType", ad.getRegType());
-        map.put("cityId", ad.getCityId());
-        map.put("accountType", ad.getAccountType());
-        map.put("contactName", ad.getAccountName());
-        map.put("contactMobile", ad.getContactMobile());
-        map.put("source", ad.getSource());
-        map.put("manager", ad.getManager());
-        map.put("accountName", ad.getAccountName());
-        map.put("bankName", ad.getBankName());
-        map.put("accountNo", ad.getAccountNo());
+
+        if (ad.getStatus()==1){
+            return "该账户已被创建";
+        }else {
+            //此处用来创建账户
+            //对找到的信息进行签名
+            AnboECCSign anboECCSign = new AnboECCSign();
+            Map<String, String> map = new HashMap<>();
+            map.put("name", ad.getName());
+            map.put("regType", ad.getRegType());
+            map.put("cityId", ad.getCityId());
+            map.put("accountType", ad.getAccountType());
+            map.put("contactName", ad.getAccountName());
+            map.put("contactMobile", ad.getContactMobile());
+            map.put("source", ad.getSource());
+            map.put("manager", ad.getManager());
+            map.put("accountName", ad.getAccountName());
+            map.put("bankName", ad.getBankName());
+            map.put("accountNo", ad.getAccountNo());
 
 //        对密码进行加密
-        AnboECCEncrypt anboECCEncrypt = new AnboECCEncrypt();
-        String dataEncryptpas = anboECCEncrypt.encrypt(ad.getPassword());
+            AnboECCEncrypt anboECCEncrypt = new AnboECCEncrypt();
+            String dataEncryptpas = anboECCEncrypt.encrypt(ad.getPassword());
 
-        map.put("password", dataEncryptpas);
+            map.put("password", dataEncryptpas);
 
-        map.put("publicKey", ad.getPublicKey());
-        String sign = anboECCSign.sign(map);
-        System.out.println("加密后的信息：" + sign);
-        map.put("sign", sign);
+            map.put("publicKey", ad.getPublicKey());
 
-        System.out.println("加密后的需要提交的信息：" + map);
+            String sign = anboECCSign.sign(map);
+            System.out.println("签名：" + sign);
 
-        String api = "account";
 
-        JSONObject obj = httpconnect.doitpost(map, api);
+//            AnboECCVerify anboECCVerify = new AnboECCVerify();
+//            Boolean check = anboECCVerify.verify(map,sign);
+//            System.out.println("check:"+check);
 
-        JSONObject object = (JSONObject) JSONObject.parse(obj.getString("result"));
+            map.put("sign", sign);
+
+            System.out.println("签名后的需要提交的信息：" + map);
+
+            String api = "account";
+
+
+            JSONObject obj = httpconnect.doitpost(map, api);
+
+            JSONObject object = obj.getJSONObject("result");
 
 //        把创建获得的partnerId传到数据库
-        if (object != null) {
-            Advertisement ad01 = new Advertisement();
+            if (object != null) {
+                Advertisement ad01 = new Advertisement();
 
-            ad01.setPartnerId(object.get("partnerId").toString());
-            ad01.setStatus(1);
+                ad01.setPartnerId(object.get("partnerId").toString());
+                ad01.setStatus(1);
+                boolean tr = AdService.updateAd(ad01);
 
-            boolean tr = AdService.updateAd(ad01);
+                System.out.println("添加结果：" + tr);
+//                然后通过这个partnerID去创建车场
+                this.tocreatePark(AdvertID);
+            }
 
-            System.out.println("添加结果：" + tr);
+            return obj.toString();
         }
-
-        return obj.toString();
     }
 
     //    更新账户信息
@@ -128,7 +140,7 @@ public class CreatAccount {
 
 //        对map信息进行签名
         String sign = anboECCSign.sign(map);
-        System.out.println("签名后的信息：" + sign);
+        System.out.println("签名：" + sign);
 
         //验签
         AnboECCVerify anboECCVerify = new AnboECCVerify();
@@ -162,7 +174,7 @@ public class CreatAccount {
         map.put("partnerId", ad.getPartnerId());
 
         String sign = anboECCSign.sign(map);
-        System.out.println("签名后的信息：" + sign);
+        System.out.println("签名：" + sign);
         map.put("sign", sign);
 
         System.out.println("签名后的需要提交的信息：" + map);
@@ -214,7 +226,15 @@ public class CreatAccount {
 
         String api = "park";
 
-//        doitpost(map,api);
+//        把获取到的车场信息传到数据库
+
+//        在这进行JSON格式中含数组的取值
+        JSONObject obj=httpconnect.doitget(map, api);
+
+        JSONArray object = obj.getJSONArray("result");
+
+        System.out.println("水水水水水水水水：" +object.getJSONObject(0).get("parkName"));
+
         return httpconnect.doitget(map, api).toString();
     }
 
@@ -250,7 +270,7 @@ public class CreatAccount {
     @ResponseBody
     public String getADwinfo(String parkId) throws Exception {
         //此处将要发送的数据转换为map格式
-        System.out.println("开始通过广告主ID寻找信息...");
+        System.out.println("开始通过停车场ID寻找信息...");
         AdContent ad = AdContentService.findbyparkId(parkId);
         //此处用来创建账户
         //对找到的信息进行签名
@@ -262,8 +282,10 @@ public class CreatAccount {
 
         String api = "advert-pos";
 
-//        doitpost(map,api);
-        return httpconnect.doitget(map, api).toString();
+        JSONObject obj=httpconnect.doitget(map, api);
+
+
+        return obj.toString();
     }
 
     //    获取广告
@@ -284,15 +306,36 @@ public class CreatAccount {
         map.put("userLicense", ad.getUserLicense());
 
         String sign = anboECCSign.sign(map);
-        System.out.println("加密后的信息：" + sign);
+        System.out.println("签名：" + sign);
         map.put("sign", sign);
 
-        System.out.println("加密后的需要提交的信息：" + map);
+        System.out.println("签名后的需要提交的信息：" + map);
 
         String api = "advert";
 
-//        doitpost(map,api);
-        return httpconnect.doitget(map, api).toString();
+        JSONObject obj = httpconnect.doitget(map, api);
+
+//        把获取到的广告url存到数据库
+        JSONObject object = (JSONObject) obj.getJSONObject("result");
+
+        System.out.println("水水水水水水水水：" +object.toString());
+
+//        把创建获得的partnerId传到数据库
+        if (object != null) {
+            AdContent adc = new AdContent();
+
+            adc.setContent1(object.get("content").toString());
+            adc.setContent1(object.get("adId").toString());
+            adc.setContent1(object.get("adType").toString());
+            adc.setContent1(object.get("url").toString());
+
+            boolean tr = AdContentService.updateAdConnect(adc);
+
+            System.out.println("添加结果：" + tr);
+        }
+
+        return obj.toString();
+
     }
 
     //    广告跳转
