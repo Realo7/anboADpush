@@ -13,4 +13,28 @@ public class AdContentServiceImpl implements AdContentService {
     public AdContent findbyparkId(String parkId) {
         return AdContentDao.findbyparkId(parkId);
     }
+
+    @Override
+    public boolean addAdConnect(AdContent ADC) {
+        boolean flag=false;
+        try{
+            AdContentDao.addAdConnect(ADC);
+            flag=true;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return flag;
+    }
+
+    @Override
+    public boolean updateAdConnect(AdContent ADC) {
+        boolean flag=false;
+        try{
+            AdContentDao.updateAdConnect(ADC);
+            flag=true;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return flag;
+    }
 }
