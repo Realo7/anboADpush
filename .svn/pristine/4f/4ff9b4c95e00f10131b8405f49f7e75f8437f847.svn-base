@@ -1,7 +1,0 @@
-com\hq\adpush\controller\AdvertisementParkController.class
-com\hq\adpush\service\impl\AdParkServiceImpl.class
-com\hq\adpush\dao\AdvertisementParkDao.class
-com\hq\adpush\entity\Advertisement.class
-com\hq\adpush\service\AdvertisementParkService.class
-com\hq\adpush\AdpushApplication.class
-com\hq\adpush\entity\Advertisement_Park.class

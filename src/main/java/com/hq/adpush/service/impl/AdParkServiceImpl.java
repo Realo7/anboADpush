@@ -40,4 +40,45 @@ public class AdParkServiceImpl implements AdvertisementParkService {
         return AdvertisementParkDao.findparkbyAdvertID(AdvertID);
     }
 
+    @Override
+    public Advertisement_Park findparkbyAdvertIDandparkId(String AdvertID, String parkId) {
+        return AdvertisementParkDao.findparkbyAdvertIDandparkId(AdvertID,parkId);
+    }
+
+    @Override
+    public String findpartnerIdbyparkId(String parkId) {
+        return AdvertisementParkDao.findpartnerIdbyparkId(parkId);
+    }
+
+    @Override
+    public String findpartnerIdbyParkinglotID(String parkinglotID) {
+        return AdvertisementParkDao.findpartnerIdbyParkinglotID(parkinglotID);
+    }
+
+    @Override
+    public String findparkIdbyParkinglotID(String ParkinglotID) {
+        return AdvertisementParkDao.findparkIdbyParkinglotID(ParkinglotID);
+    }
+
+    @Override
+    public String findParkinglotIDbyparkId(String parkId) {
+        return AdvertisementParkDao.findParkinglotIDbyparkId(parkId);
+    }
+
+    @Override
+    public String findadPosIdsbyParkinglotID(String ParkinglotID) {
+        return AdvertisementParkDao.findadPosIdsbyParkinglotID(ParkinglotID);
+    }
+
+    @Override
+    public Advertisement_Park findstatus0byAdvertID(String AdvertID) {
+        return AdvertisementParkDao.findstatus0byAdvertID(AdvertID);
+    }
+
+    @Override
+    public Advertisement_Park findbyParkinglotID(String ParkinglotID) {
+        return AdvertisementParkDao.findbyParkinglotID(ParkinglotID);
+    }
+
+
 }

@@ -1,4 +1,0 @@
-spring.datasource.url=jdbc:sqlserver://localhost:1433;DatabaseName=SQA_SMP_Cloud_Test20191016
-spring.datasource.driverClassName=com.microsoft.sqlserver.jdbc.SQLServerDriver
-spring.datasource.username=sa
-spring.datasource.password=123

@@ -30,7 +30,10 @@ public class AdvertisementController {
     }
 
     @RequestMapping(value = "/update", method = RequestMethod.POST)
-    public boolean updateAd(Advertisement AD){
+    public boolean updateAd(){
+        Advertisement AD=new Advertisement();
+        AD.setAdvertID("001");
+        AD.setContactMobile("123456789");
         System.out.println("开始更新advertisement...");
         return AdService.updateAd(AD);
     }
@@ -47,7 +50,7 @@ public class AdvertisementController {
         return AdService.findAll();
     }
 
-//    对通过广告主ID查找到的信息进行加密
+//    对通过广告主ID查找到的信息进行签名
 @RequestMapping(value = "/secretbyAdvertID", method = RequestMethod.POST)
 @ResponseBody
 public String secretinfo(String AdvertID)throws Exception{

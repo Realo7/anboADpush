@@ -46,4 +46,14 @@ public class AdServiceImpl implements AdService {
     public List<Advertisement> findAll() {
         return AdvertisementDao.findall();
     }
+
+    @Override
+    public Advertisement findstatus0(){
+        return AdvertisementDao.findstatus0();
+    }
+
+    @Override
+    public Advertisement findpartnerIdnotblank() {
+        return AdvertisementDao.findpartnerIdnotblank();
+    }
 }

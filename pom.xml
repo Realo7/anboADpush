@@ -16,6 +16,9 @@
 
     <properties>
         <java.version>1.8</java.version>
+        <!-- 跳过测试 -->
+<!--        <skipTests>true</skipTests>-->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <repositories>
@@ -58,14 +61,16 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
-            <version>8.2.2.jre8</version>
+            <version>8.2.0.jre8</version>
         </dependency>
+
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>sqljdbc4</artifactId>
             <version>4.0</version>
             <scope>test</scope>
         </dependency>
+
         <!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -95,15 +100,13 @@
             <version>4.5.12</version>
         </dependency>
 
-
-
         <!-- 本地jar包,安泊平台的sdk-->
         <dependency>
             <groupId>anbo-sdk</groupId>
             <artifactId>anbo-sdk</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/jar/anbo-sdk-1.0.0.jar</systemPath>
+            <systemPath>${pom.basedir}/src/main/resources/jar/anbo-sdk-1.1.0.jar</systemPath>
         </dependency>
     </dependencies>
 
@@ -112,9 +115,22 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>
+                                repackage
+                            </goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <includeSystemScope>
+                        true
+                    </includeSystemScope>
+                </configuration>
             </plugin>
         </plugins>
-
 
         <!--引入本地资源-->
         <resources>
@@ -122,7 +138,7 @@
                 <directory>lib</directory>
                 <targetPath>${project.basedir}/src/main/resources/jar/</targetPath>
                 <includes>
-                    <include>**/*.jar</include>
+                    <include>*.jar</include>
                 </includes>
             </resource>
         </resources>

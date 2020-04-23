@@ -17,28 +17,16 @@ public class Advertisement_Park {
     private String sign;
     //
     private Integer status;
+    //
+    private String ParkinglotID;
 
-    @Override
-    public String toString() {
-        return "Advertisement_Park{" +
-                "ID=" + ID +
-                ", ParkId='" + ParkId + '\'' +
-                ", AdvertID='" + AdvertID + '\'' +
-                ", parkName='" + parkName + '\'' +
-                ", cityId='" + cityId + '\'' +
-                ", partnerId='" + partnerId + '\'' +
-                ", sign='" + sign + '\'' +
-                ", status=" + status +
-                '}';
-    }
+    private String adPosIds;
 
-    public Integer getStatus() {
-        return status;
-    }
+    private String userMobile;
 
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
+    private String userLicense;
+
+    private String adId;
 
     public Integer getID() {
         return ID;
@@ -94,5 +82,72 @@ public class Advertisement_Park {
 
     public void setSign(String sign) {
         this.sign = sign;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public String getParkinglotID() {
+        return ParkinglotID;
+    }
+
+    public void setParkinglotID(String parkinglotID) {
+        ParkinglotID = parkinglotID;
+    }
+
+    public String getAdPosIds() {
+        return adPosIds;
+    }
+
+    public void setAdPosIds(String adPosIds) {
+        this.adPosIds = adPosIds;
+    }
+
+    public String getUserMobile() {
+        return userMobile;
+    }
+
+    public void setUserMobile(String userMobile) {
+        this.userMobile = userMobile;
+    }
+
+    public String getUserLicense() {
+        return userLicense;
+    }
+
+    public void setUserLicense(String userLicense) {
+        this.userLicense = userLicense;
+    }
+
+    public String getAdId() {
+        return adId;
+    }
+
+    public void setAdId(String adId) {
+        this.adId = adId;
+    }
+
+    @Override
+    public String toString() {
+        return "Advertisement_Park{" +
+                "ID=" + ID +
+                ", ParkId='" + ParkId + '\'' +
+                ", AdvertID='" + AdvertID + '\'' +
+                ", parkName='" + parkName + '\'' +
+                ", cityId='" + cityId + '\'' +
+                ", partnerId='" + partnerId + '\'' +
+                ", sign='" + sign + '\'' +
+                ", status=" + status +
+                ", ParkinglotID='" + ParkinglotID + '\'' +
+                ", adPosIds='" + adPosIds + '\'' +
+                ", userMobile='" + userMobile + '\'' +
+                ", userLicense='" + userLicense + '\'' +
+                ", adId='" + adId + '\'' +
+                '}';
     }
 }
