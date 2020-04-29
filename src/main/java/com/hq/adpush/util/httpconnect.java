@@ -14,7 +14,7 @@ public class httpconnect {
         RestTemplate restTemplate = new RestTemplate();
 
         //请求地址
-        String url = "https://api-test.anbokeji.net/api/v1/" + api;
+        String url = "https://api.anbokeji.net/api/v1/" + api;
         // 设置请求头
         String part = map.get("partnerId");
         HttpHeaders headers = new HttpHeaders();
@@ -35,9 +35,9 @@ public class httpconnect {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.setRequestFactory(new restnet.HttpComponentsClientRestfulHttpRequestFactory());
         //请求地址
-        String url = "https://api-test.anbokeji.net/api/v1/" + api;
+        String url = "https://api.anbokeji.net/api/v1/" + api;
 
-        System.out.println("getmap" + map);
+        System.out.println("get提交的map" + map);
         // 设置请求头
         String part = map.get("partnerId");
         HttpHeaders headers = new HttpHeaders();
@@ -61,7 +61,7 @@ public class httpconnect {
     public static JSONObject doitput(Map<String, String> map, String api) {
         RestTemplate restTemplate = new RestTemplate();
         //请求地址
-        String url = "https://api-test.anbokeji.net/api/v1/" + api;
+        String url = "https://api.anbokeji.net/api/v1/" + api;
         // 设置请求头
         String part = map.get("partnerId");
         HttpHeaders headers = new HttpHeaders();
@@ -75,4 +75,5 @@ public class httpconnect {
 
         return response.getBody();
     }
+
 }

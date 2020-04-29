@@ -9,4 +9,6 @@ public interface AdService {
     boolean updateAd(Advertisement AD);
     Advertisement findbyAdvertID(String AdvertID);
     List<Advertisement> findAll();
+    Advertisement findstatus0();
+    Advertisement findpartnerIdnotblank();
 }
